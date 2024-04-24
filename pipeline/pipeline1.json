@@ -1,0 +1,203 @@
+{
+	"name": "pipeline1",
+	"properties": {
+		"activities": [
+			{
+				"name": "Until1",
+				"type": "Until",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@variables('fileexists')",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Get Metadata1",
+							"type": "GetMetadata",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataset": {
+									"referenceName": "ds_csvsrc",
+									"type": "DatasetReference",
+									"parameters": {
+										"srcpath": "@pipeline().parameters.srcpath",
+										"srcfile": "@pipeline().parameters.srcfile"
+									}
+								},
+								"fieldList": [
+									"exists"
+								],
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							}
+						},
+						{
+							"name": "Set variable1",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "Get Metadata1",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "fileexists",
+								"value": {
+									"value": "@activity('Get Metadata1').output.exists",
+									"type": "Expression"
+								}
+							}
+						}
+					],
+					"timeout": "0.12:00:00"
+				}
+			},
+			{
+				"name": "ForEachFolderList",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Until1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@variables('folderlist')",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Copy data1",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "ds_csvsrc",
+									"type": "DatasetReference",
+									"parameters": {
+										"srcpath": "@pipeline().parameters.srcpath",
+										"srcfile": "@pipeline().parameters.srcfile"
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ds_csvdest",
+									"type": "DatasetReference",
+									"parameters": {
+										"destpath": "@pipeline().parameters.destpath",
+										"destfile": {
+											"value": "@concat(pipeline().parameters.destfile,'_',formatDateTime(utcNow(),'yyyyMMdd'),'.csv')",
+											"type": "Expression"
+										},
+										"destfolder": "@item()"
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"srcpath": {
+				"type": "string"
+			},
+			"srcfile": {
+				"type": "string"
+			},
+			"destpath": {
+				"type": "string"
+			},
+			"destfile": {
+				"type": "string"
+			}
+		},
+		"variables": {
+			"fileexists": {
+				"type": "Boolean",
+				"defaultValue": false
+			},
+			"folderlist": {
+				"type": "Array",
+				"defaultValue": [
+					"output1",
+					"output2",
+					"output3"
+				]
+			},
+			"destfolder": {
+				"type": "String"
+			}
+		},
+		"annotations": []
+	}
+}
