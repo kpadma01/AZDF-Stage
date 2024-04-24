@@ -1,0 +1,9 @@
+{
+	"name": "kpazdf-stage",
+	"location": "centralus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "c98988be-a5ad-4f73-92df-2a6c1fe72eca",
+		"tenantId": "c1ee09ed-fb33-4466-bc88-ac10c5098221"
+	}
+}
