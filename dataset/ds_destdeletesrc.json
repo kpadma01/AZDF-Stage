@@ -18,8 +18,14 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"fileName": "@dataset().srcfile",
-				"fileSystem": "@dataset().srcpath"
+				"fileName": {
+					"value": "@dataset().srcfile",
+					"type": "Expression"
+				},
+				"fileSystem": {
+					"value": "@dataset().srcpath",
+					"type": "Expression"
+				}
 			},
 			"columnDelimiter": ",",
 			"escapeChar": "\\",
@@ -27,5 +33,6 @@
 			"quoteChar": "\""
 		},
 		"schema": []
-	}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
 }
