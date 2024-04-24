@@ -146,6 +146,48 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/ds_destdeletesrc')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "kp_ls",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"srcpath": {
+						"type": "string"
+					},
+					"srcfile": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().srcfile",
+							"type": "Expression"
+						},
+						"fileSystem": {
+							"value": "@dataset().srcpath",
+							"type": "Expression"
+						}
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/kp_ls')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/ds_sqlsrc')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -175,7 +217,14 @@
 					{
 						"name": "Until1",
 						"type": "Until",
-						"dependsOn": [],
+						"dependsOn": [
+							{
+								"activity": "Delete1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
 						"userProperties": [],
 						"typeProperties": {
 							"expression": {
@@ -336,6 +385,43 @@
 								}
 							]
 						}
+					},
+					{
+						"name": "Delete1",
+						"type": "Delete",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "ds_destdeletesrc",
+								"type": "DatasetReference",
+								"parameters": {
+									"srcpath": "@pipeline().parameters.destpath",
+									"srcfile": "@pipeline().parameters.destfile"
+								}
+							},
+							"logStorageSettings": {
+								"linkedServiceName": {
+									"referenceName": "kp_ls",
+									"type": "LinkedServiceReference"
+								},
+								"path": "log"
+							},
+							"enableLogging": true,
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"wildcardFileName": "*.csv",
+								"enablePartitionDiscovery": false
+							}
+						}
 					}
 				],
 				"policy": {
@@ -375,6 +461,8 @@
 				"annotations": []
 			},
 			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_destdeletesrc')]",
+				"[concat(variables('factoryId'), '/linkedServices/kp_ls')]",
 				"[concat(variables('factoryId'), '/datasets/ds_csvsrc')]",
 				"[concat(variables('factoryId'), '/datasets/ds_csvdest')]"
 			]
