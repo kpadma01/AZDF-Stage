@@ -1,0 +1,31 @@
+{
+	"name": "ds_destdeletesrc",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "kp_ls",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"srcpath": {
+				"type": "string"
+			},
+			"srcfile": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "@dataset().srcfile",
+				"fileSystem": "@dataset().srcpath"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	}
+}
